@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>社畜脱出ストーリー 〜3年目の転職・多才な仲間たち編〜</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --panel-color: #ffffff;
+            --text-color: #2f3542;
+            --accent-color: #ff4757;
+            --success-color: #2ed573;
+            --hp-color: #ff6b81;
+            --mp-color: #70a1ff;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--panel-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e1e8ed;
+        }
+
+        #header-panel {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #e1e8ed;
+        }
+
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #d97706;
+        }
+
+        .bars-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .bar-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bar-label {
+            width: 70px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #57606f;
+        }
+
+        .progress-outer {
+            flex-grow: 1;
+            height: 16px;
+            background-color: #e4e7ed;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .progress-inner {
+            height: 100%;
+            width: 100%;
+            transition: width 0.3s ease;
+        }
+
+        #hp-bar { background-color: var(--hp-color); }
+        #mp-bar { background-color: var(--mp-color); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background: #ffffff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            border: 1px solid #e4e7ed;
+            color: #57606f;
+        }
+
+        .stat-item span {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        #friends-status {
+            grid-column: 1 / -1;
+            border-top: 1px solid #e4e7ed;
+            padding-top: 5px;
+            margin-top: 5px;
+            color: #747d8c;
+            line-height: 1.4;
+        }
+
+        #main-window {
+            padding: 30px 20px;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: #ffffff;
+        }
+
+        #speaker-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #e67e22;
+            margin-bottom: 10px;
+            height: 1.5rem;
+        }
+
+        #dialogue-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        #action-panel {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e1e8ed;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            background-color: #ffffff;
+            color: var(--text-color);
+            border: 1px solid #ced4da;
+            padding: 14px 20px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            touch-action: manipulation; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: #f1f2f6;
+            border-color: #a4b0be;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background-color: #e4e7ed;
+        }
+
+        /* --- ミニゲームスタイル --- */
+        #minigame-area { display: none; text-align: center; padding: 10px 0; }
+        .mg-container { display: none; margin-top: 15px; }
+
+        .mash-btn {
+            background-color: var(--accent-color);
+            width: 120px; height: 120px; border-radius: 50%; border: 5px solid #fff;
+            color: white; font-size: 1.2rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15); margin: 20px auto;
+            display: flex; justify-content: center; align-items: center; user-select: none;
+            touch-action: manipulation; 
+        }
+        .mash-btn:active { transform: scale(0.95); }
+
+        .timing-bar-outer { width: 100%; height: 24px; background-color: #e4e7ed; border-radius: 12px; position: relative; overflow: hidden; margin: 20px 0; }
+        .timing-zone { position: absolute; top: 0; left: 42%; width: 16%; height: 100%; background-color: var(--success-color); }
+        .timing-pointer { position: absolute; top: 0; left: 0; width: 6px; height: 100%; background-color: #2f3542; box-shadow: 0 0 4px rgba(0,0,0,0.3); }
+
+        .num-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 260px; margin: 20px auto; }
+        .num-btn { background-color: #ffa502; color: #ffffff; font-size: 1.5rem; font-weight: bold; border: none; padding: 20px; border-radius: 8px; cursor: pointer; text-align: center; touch-action: manipulation; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .num-btn:active { background-color: #ff7f50; }
+
+        .sleep-bar-outer { width: 100%; height: 30px; background-color: #e4e7ed; border-radius: 6px; position: relative; margin: 20px 0; border: 2px solid #ced4da; }
+        .sleep-safe-zone { position: absolute; top: 0; left: 30%; width: 40%; height: 100%; background-color: rgba(46, 213, 115, 0.2); border-left: 2px dashed var(--success-color); border-right: 2px dashed var(--success-color); }
+        .sleep-pointer { position: absolute; top: 0; left: 50%; width: 12px; height: 100%; background-color: var(--accent-color); margin-left: -6px; border-radius: 2px; transition: left 0.05s linear; }
+
+        @media (max-width: 600px) {
+            body { padding: 8px; align-items: flex-start; }
+            #game-container { border-radius: 8px; }
+            #header-panel { padding: 10px 12px; }
+            .meta-info { font-size: 1rem; }
+            .bars-container { grid-template-columns: 1fr; gap: 6px; }
+            .bar-label { width: 55px; font-size: 0.8rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 0.8rem; }
+            #main-window { padding: 20px 15px; min-height: 160px; }
+            #speaker-name { font-size: 1rem; margin-bottom: 6px; }
+            #dialogue-text { font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px; }
+            #action-panel { padding: 12px; gap: 8px; }
+            .btn { padding: 12px 15px; font-size: 0.9rem; }
+            .mash-btn { width: 100px; height: 100px; font-size: 1.1rem; }
+            .num-btn { padding: 15px; font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="header-panel">
+        <div class="meta-info">
+            <div id="display-date">1年目 4月</div>
+            <div id="display-eval">役職: 平社員 (評価: 0)</div>
+        </div>
+        <div class="bars-container">
+            <div class="bar-group">
+                <div class="bar-label">体力(HP)</div>
+                <div class="progress-outer"><div id="hp-bar" class="progress-inner"></div></div>
+            </div>
+            <div class="bar-group">
+                <div class="bar-label">メンタル</div>
+                <div class="progress-outer"><div id="mp-bar" class="progress-inner"></div></div>
+            </div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-item">コミュ: <span id="stat-comm">10</span></div>
+            <div class="stat-item">頭脳: <span id="stat-intel">10</span></div>
+            <div class="stat-item">ルックス: <span id="stat-look">10</span></div>
+            <div class="stat-item">総能力: <span id="stat-total">30</span></div>
+            <div id="friends-status">仲間: 未遭遇</div>
+        </div>
+    </div>
+
+    <div id="main-window">
+        <div id="speaker-name"></div>
+        <div id="dialogue-text">ブラック企業へようこそ…</div>
+        
+        <div id="minigame-area">
+            <p id="mg-title" style="font-weight: bold; color: #e67e22; margin: 0;"></p>
+            <p id="mg-instructions" style="font-size:0.9rem; margin: 5px 0 10px 0; color: #57606f;"></p>
+            <div id="mg-timer" style="font-size: 1.4rem; color: var(--accent-color); font-weight:bold;">残り: 5.0秒</div>
+            
+            <!-- 1. 連打 -->
+            <div id="mg-container-mash" class="mg-container">
+                <div id="mg-mash-progress" style="font-size:0.95rem; color: var(--text-color);">達成度: 0 / 25</div>
+                <div class="mash-btn" id="mg-mash-btn">連打！</div>
+            </div>
+
+            <!-- 2. タイミング -->
+            <div id="mg-container-timing" class="mg-container">
+                <div id="mg-timing-progress" style="font-size:0.95rem; color: var(--text-color);">成功回数: 0 / 2</div>
+                <div class="timing-bar-outer">
+                    <div class="timing-zone"></div>
+                    <div class="timing-pointer" id="mg-timing-pointer"></div>
+                </div>
+                <button class="btn" id="mg-timing-btn" style="text-align:center; width:100%; display:block;">今だ！承認スタンプ！</button>
+            </div>
+
+            <!-- 3. 数字整理 -->
+            <div id="mg-container-numbers" class="mg-container">
+                <div id="mg-numbers-target" style="font-size:1.1rem; font-weight:bold; color:var(--success-color);">「1」をタップしろ！</div>
+                <div class="num-grid" id="mg-numbers-grid"></div>
+            </div>
+
+            <!-- 4. 謝罪メール -->
+            <div id="mg-container-apology" class="mg-container">
+                <div id="mg-apology-q" style="font-size:0.95rem; margin-bottom:15px; background:#f1f2f6; padding:10px; border-radius:6px; text-align:left; border: 1px solid #e4e7ed; color: var(--text-color);"></div>
+                <div id="mg-apology-choices" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
+            <!-- 5. 睡魔ホールド -->
+            <div id="mg-container-sleep" class="mg-container">
+                <div class="sleep-bar-outer">
+                    <div class="sleep-safe-zone"></div>
+                    <div class="sleep-pointer" id="mg-sleep-pointer"></div>
+                </div>
+                <button class="btn" id="mg-sleep-btn" style="text-align:center; width:100%; display:block;">コーヒーを飲む（ゲージUP）</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="action-panel"></div>
+</div>
+
+<script>
+    let state = {
+        year: 1, month: 4, phase: 'work', hp: 100, mp: 100,
+        comm: 10, intel: 10, look: 10, evaluation: 0, impulse: 0,
+        hasDebuff: false, currentTurnCount: 1,
+        friends: {
+            sato: { name: "佐藤(同期)", met: false, love: 0 },
+            suzuki: { name: "鈴木(先輩)", met: false, love: 0 },
+            takahashi: { name: "高橋(後輩)", met: false, love: 0 },
+            oda: { name: "織田(隠し)", met: false, love: 0 },
+            kato: { name: "加藤(PM)", met: false, love: 0 },
+            watanabe: { name: "渡辺(IT)", met: false, love: 0 },
+            kobayashi: { name: "小林(受付)", met: false, love: 0 },
+            tanaka: { name: "田中(営業)", met: false, love: 0 }
+        }
+    };
+
+    const textData = { boss: "パワハラ上司", senior: "お局先輩", coworker: "手柄泥棒の同僚", narration: "" };
+
+    const workEvents = [
+        {
+            speaker: textData.boss,
+            text: "「おい牧！この資料のデータ、全然ダメじゃないか！今すぐ全部やり直せ。今日中に終わらせるんだぞ？」",
+            choices: [
+                { text: "「申し訳ありません！」と平謝りして残業する", hp: -25, mp: -15, eval: 5, impulse: 5, log: "従順に対応したが、心身が削られた。" },
+                { text: "適当にいなして、最低限の修正で提出する", hp: -10, mp: -10, comm: 5, impulse: 10, log: "上手くいなした！しかし上司の目は冷ややかだ。" }
+            ]
+        },
+        {
+            speaker: textData.senior,
+            text: "「ちょっと牧くん、私のデスクの書類片付けといて〜。あ、ついでにお茶ガラも捨てといてね」",
+            choices: [
+                { text: "笑顔で雑用を引き受ける", hp: -15, mp: -10, look: 5, eval: 3, log: "愛想よく対応したことで、社内評価と好感度が微増した。" },
+                { text: "「急ぎの案件を抱えておりまして…」と知的な嘘でかわす", hp: -5, mp: -5, intel: 5, log: "頭脳を活かしてかわした。お局先輩はムッとしている。" }
+            ]
+        },
+        {
+            speaker: textData.coworker,
+            text: "「牧、こないだのプロジェクトの企画、俺の名前で出しといたから！チームの実績ってことでさ」",
+            choices: [
+                { text: "悔しいが、波風を立てずに引き下がる", hp: -10, mp: -30, impulse: 15, log: "手柄を横取りされ、メンタルに大ダメージを受けた。" },
+                { text: "「それなら次の案件の枠を譲ってください」と交渉する", hp: -10, mp: -10, comm: 10, eval: 5, log: "コミュ力を活かして実利を奪い返した！" }
+            ]
+        }
+    ];
+
+    function initGame() { updateUI(); triggerWorkPhase(); }
+
+    function updateUI() {
+        document.getElementById('display-date').innerText = `${state.year}年目 ${state.month}月`;
+        let rank = state.evaluation >= 150 ? "課長" : (state.evaluation >= 80 ? "係長代理" : "平社員");
+        document.getElementById('display-eval').innerText = `役職: ${rank} (評価: ${state.evaluation})`;
+        document.getElementById('hp-bar').style.width = `${Math.max(0, state.hp)}%`;
+        document.getElementById('mp-bar').style.width = `${Math.max(0, state.mp)}%`;
+        document.getElementById('stat-comm').innerText = state.comm;
+        document.getElementById('stat-intel').innerText = state.intel;
+        document.getElementById('stat-look').innerText = state.look;
+        const totalStat = state.comm + state.intel + state.look;
+        document.getElementById('stat-total').innerText = totalStat;
+
+        let friendsText = "仲間: ";
+        let metAny = false;
+        for (let key in state.friends) {
+            if (state.friends[key].met) {
+                friendsText += `[${state.friends[key].name.split('(')[0]}:❤${state.friends[key].love}] `;
+                metAny = true;
+            }
+        }
+        document.getElementById('friends-status').innerText = metAny ? friendsText : "仲間: 未遭遇";
+
+        if (state.impulse >= 100) { triggerEnding("murder"); return true; }
+        if (state.mp <= 0) { triggerEnding("mental_breakdown"); return true; }
+        return false;
+    }
+
+    function setChoices(choicesArray) {
+        const panel = document.getElementById('action-panel');
+        panel.innerHTML = '';
+        choicesArray.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = 'btn'; btn.innerText = c.text;
+            if (c.disabled) btn.disabled = true;
+            btn.onclick = c.action;
+            panel.appendChild(btn);
+        });
+    }
+
+    function triggerWorkPhase() {
+        state.phase = 'work';
+        if ((state.month === 4 || state.month === 10) && state.currentTurnCount > 1) {
+            selectAndStartMinigame();
+            return;
+        }
+
+        const ev = workEvents[Math.floor(Math.random() * workEvents.length)];
+        document.getElementById('speaker-name').innerText = ev.speaker;
+        document.getElementById('dialogue-text').innerText = ev.text;
+
+        const choices = ev.choices.map(c => {
+            return {
+                text: c.text,
+                action: () => {
+                    state.hp = Math.max(0, state.hp + (c.hp || 0));
+                    state.mp = Math.max(0, state.mp + (c.mp || 0));
+                    if (c.eval) state.evaluation += c.eval;
+                    if (c.comm) state.comm += c.comm;
+                    if (c.intel) state.intel += c.intel;
+                    if (c.look) state.look += c.look;
+                    if (c.impulse) state.impulse += c.impulse;
+
+                    document.getElementById('speaker-name').innerText = textData.narration;
+                    document.getElementById('dialogue-text').innerText = c.log;
+
+                    if (updateUI()) return;
+                    setChoices([{ text: "次へ進む", action: () => { triggerColleaguePhase(); } }]);
+                }
+            };
+        });
+        setChoices(choices);
+    }
+
+    function triggerColleaguePhase() {
+        state.phase = 'colleague';
+        const totalStat = state.comm + state.intel + state.look;
+        let specialCandidates = [];
+        
+        if (state.comm >= 30 && state.intel >= 30 && state.look >= 30 && totalStat >= 100) specialCandidates.push('oda');
+        if (totalStat >= 100) specialCandidates.push('kato');
+        if (state.intel >= 30) specialCandidates.push('watanabe');
+        if (state.look >= 30) specialCandidates.push('kobayashi');
+        if (state.comm >= 30) specialCandidates.push('tanaka');
+
+        // --- 特殊隠し仲間の出現判定（確率: 5%） ---
+        if (specialCandidates.length > 0 && Math.random() < 0.05) {
+            const chosenKey = specialCandidates[Math.floor(Math.random() * specialCandidates.length)];
+            const f = state.friends[chosenKey];
+            document.getElementById('speaker-name').innerText = f.name;
+
+            if (chosenKey === 'oda') {
+                if (!f.met) {
+                    f.met = true; f.love = 20;
+                    document.getElementById('dialogue-text').innerText = "「噂通りの逸材だね。君を欲しがっているハイクラス企業が山ほどある。私のコネクションを使ってみないかい？」\n伝説のヘッドハンター織田と遭遇！転職活動の成功率が超絶アップ！";
+                } else {
+                    f.love += 20; state.evaluation += 30;
+                    document.getElementById('dialogue-text').innerText = "織田と極秘のキャリア戦略会議を行った。市場価値が高まり社内評価も引き上げられた！";
+                }
+            } 
+            else if (chosenKey === 'kato') {
+                if (!f.met) {
+                    f.met = true; f.love = 20;
+                    state.hp = Math.min(100, state.hp + 20); state.mp = Math.min(100, state.mp + 20);
+                    document.getElementById('dialogue-text').innerText = "「君の全体的な働きぶり、実に見事だ。この大きなプロジェクト、君を中心に回してみよう」\n敏腕PM加藤に実力を認められた！心身が大きく回復！";
+                } else {
+                    f.love += 20; state.comm += 2; state.intel += 2; state.look += 2;
+                    document.getElementById('dialogue-text').innerText = "加藤の洗練されたタスクマネジメントを直近で学び、全ての能力が底上げされた！";
+                }
+            } 
+            else if (chosenKey === 'watanabe') {
+                if (!f.met) {
+                    f.met = true; f.love = 20; state.intel += 10;
+                    document.getElementById('dialogue-text').innerText = "「お前の組んだ設計、悪くない。…というかかなり合理的だな。面白い奴だ」\n天才エンジニア渡辺と意気投合！マニアックな技術知識を教わり、頭脳＋10！";
+                } else {
+                    f.love += 20; state.intel += 5; state.mp = Math.min(100, state.mp + 10);
+                    document.getElementById('dialogue-text').innerText = "渡辺が業務自動化ツールを組んでくれた。頭脳が冴え渡り、作業が劇的に楽になった！";
+                }
+            } 
+            else if (chosenKey === 'kobayashi') {
+                if (!f.met) {
+                    f.met = true; f.love = 20; state.look += 10;
+                    document.getElementById('dialogue-text').innerText = "「牧さん、いつもお疲れ様です！これ、よかったらどうぞ」\nマドンナ受付嬢の小林から缶コーヒーを貰った！美意識を刺激されルックス＋10！";
+                } else {
+                    f.love += 20; state.look += 5; state.hp = Math.min(100, state.hp + 15);
+                    document.getElementById('dialogue-text').innerText = "小林とロビーで談笑した。社内での立ち振る舞いが洗練され、疲れも大幅に癒やされた！";
+                }
+            } 
+            else if (chosenKey === 'tanaka') {
+                if (!f.met) {
+                    f.met = true; f.love = 20; state.comm += 10;
+                    document.getElementById('dialogue-text').innerText = "「よぉ牧！お前の噂、営業部まで届いてるぜ。今度大きい案件一緒にやろうや！」\nカリスマ営業エース田中と繋がりができた！交渉の極意を学びコミュ力＋10！";
+                } else {
+                    f.love += 20; state.comm += 5; state.evaluation += 15;
+                    document.getElementById('dialogue-text').innerText = "田中の人脈作りに同行した。社内人脈が広がり、自身の評価とコミュ力が向上した！";
+                }
+            }
+
+            updateUI();
+            setChoices([{ text: "プライベートへ", action: () => { triggerPrivatePhase(); } }]);
+            return;
+        }
+
+        // --- 通常仲間の出現判定（確率: 5%） ---
+        if (Math.random() < 0.05) {
+            const friendKeys = ['sato', 'suzuki', 'takahashi'];
+            const chosenKey = friendKeys[Math.floor(Math.random() * friendKeys.length)];
+            const f = state.friends[chosenKey];
+
+            document.getElementById('speaker-name').innerText = f.name;
+            
+            if (chosenKey === 'sato') {
+                if (!f.met) {
+                    f.met = true; f.love = 15;
+                    document.getElementById('dialogue-text').innerText = "「牧、頑張ってるな。同期として俺も負けてらんないよ。でも無理すんなよな！」\n社内で競い合える同期と繋がりができた！";
+                } else {
+                    f.love += 15; state.mp = Math.min(100, state.mp + 15);
+                    document.getElementById('dialogue-text').innerText = "給湯室で佐藤と会社への愚痴を言い合った。少し心が軽くなった！";
+                }
+            } 
+            else if (chosenKey === 'suzuki') {
+                if (!f.met) {
+                    f.met = true; f.love = 15;
+                    document.getElementById('dialogue-text').innerText = "「牧くん、よくやってるわね。精度を詰めすぎちゃダメよ。たまには息を抜きなさい？」\n社内で優しく見守ってくれる先輩と繋がりができた！";
+                } else {
+                    f.love += 15; state.mp = Math.min(100, state.mp + 15);
+                    document.getElementById('dialogue-text').innerText = "鈴木先輩からちょっとしたお菓子の差し入れをもらった。少し心が軽くなった。";
+                }
+            } 
+            else if (chosenKey === 'takahashi') {
+                if (!f.met) {
+                    f.met = true; f.love = 15;
+                    document.getElementById('dialogue-text').innerText = "「牧先輩！オレ、先輩の仕事っぷりマジで尊敬してるっす！あんまり無理しないでくださいね！」\n社内で自分を慕ってくれる可愛い後輩と繋がりができた！";
+                } else {
+                    f.love += 15; state.mp = Math.min(100, state.mp + 15);
+                    document.getElementById('dialogue-text').innerText = "「先輩！これ自販機で見つけた美味いコーヒーっす！」\n高橋からドリンクを奢ってもらった。元気が湧いてきた！";
+                }
+            }
+
+            updateUI();
+            setChoices([{ text: "プライベートへ", action: () => { triggerPrivatePhase(); } }]);
+        } else {
+            triggerPrivatePhase();
+        }
+    }
+
+    // --- ミニゲーム処理 ---
+    let mgInterval = null;
+    function selectAndStartMinigame() {
+        state.phase = 'minigame';
+        document.getElementById('dialogue-text').style.display = 'none';
+        document.getElementById('minigame-area').style.display = 'block';
+        setChoices([]);
+        document.querySelectorAll('.mg-container').forEach(el => el.style.display = 'none');
+
+        const gameTypes = ['mash', 'timing', 'numbers', 'apology', 'sleep'];
+        const chosenGame = gameTypes[Math.floor(Math.random() * gameTypes.length)];
+
+        let timeLeft = 6.0;
+        document.getElementById('mg-timer').innerText = `残り: ${timeLeft.toFixed(1)}秒`;
+
+        mgInterval = setInterval(() => {
+            timeLeft -= 0.1;
+            document.getElementById('mg-timer').innerText = `残り: ${Math.max(0, timeLeft).toFixed(1)}秒`;
+            if (timeLeft <= 0) {
+                clearInterval(mgInterval);
+                endMinigame(chosenGame === 'sleep');
+            }
+        }, 100);
+
+        if (chosenGame === 'mash') setupMashGame();
+        else if (chosenGame === 'timing') setupTimingGame();
+        else if (chosenGame === 'numbers') setupNumbersGame();
+        else if (chosenGame === 'apology') setupApologyGame();
+        else if (chosenGame === 'sleep') setupSleepGame();
+    }
+
+    function setupMashGame() {
+        document.getElementById('mg-title').innerText = "⚠️ 突発的な無理難題";
+        document.getElementById('mg-instructions').innerText = "ボタンを連打して理不尽な仕事を押し返せ！";
+        document.getElementById('mg-container-mash').style.display = 'block';
+        let clicks = 0; const target = 25 - Math.floor(state.comm / 5);
+        document.getElementById('mg-mash-progress').innerText = `達成度: ${clicks} / ${target}`;
+        document.getElementById('mg-mash-btn').onclick = () => {
+            clicks++; document.getElementById('mg-mash-progress').innerText = `達成度: ${clicks} / ${target}`;
+            if (clicks >= target) { clearInterval(mgInterval); endMinigame(true); }
+        };
+    }
+
+    function setupTimingGame() {
+        document.getElementById('mg-title').innerText = "⚠️ 大量書類の緊急承認";
+        document.getElementById('mg-instructions').innerText = "動くバーを緑の「承認エリア」内でタイミングよく止めろ！";
+        document.getElementById('mg-container-timing').style.display = 'block';
+        let successCount = 0; const target = 2;
+        document.getElementById('mg-timing-progress').innerText = `成功回数: ${successCount} / ${target}`;
+        let pos = 0; let direction = 3;
+        let animInterval = setInterval(() => {
+            pos += direction; if (pos >= 98 || pos <= 0) direction *= -1;
+            document.getElementById('mg-timing-pointer').style.left = pos + '%';
+        }, 16);
+        document.getElementById('mg-timing-btn').onclick = () => {
+            if (pos >= 42 && pos <= 58) {
+                successCount++; document.getElementById('mg-timing-progress').innerText = `成功回数: ${successCount} / ${target}`;
+                if (successCount >= target) { clearInterval(mgInterval); clearInterval(animInterval); endMinigame(true); }
+            } else { direction = (direction > 0 ? direction + 1 : direction - 1); }
+        };
+    }
+
+    function setupNumbersGame() {
+        document.getElementById('mg-title').innerText = "⚠️ 散らばった顧客資料の整理";
+        document.getElementById('mg-instructions').innerText = "画面の書類(数字)を「1」から順番に素早くタップしろ！";
+        document.getElementById('mg-container-numbers').style.display = 'block';
+        let nextNum = 1; document.getElementById('mg-numbers-target').innerText = `「${nextNum}」をタップしろ！`;
+        const grid = document.getElementById('mg-numbers-grid'); grid.innerHTML = '';
+        let nums = [1, 2, 3, 4].sort(() => Math.random() - 0.5);
+        nums.forEach(n => {
+            const b = document.createElement('button'); b.className = 'num-btn'; b.innerText = n;
+            b.onclick = () => {
+                if (n === nextNum) {
+                    b.style.opacity = '0.3'; b.disabled = true; nextNum++;
+                    if (nextNum > 4) { clearInterval(mgInterval); endMinigame(true); }
+                    else { document.getElementById('mg-numbers-target').innerText = `「${nextNum}」をタップしろ！`; }
+                }
+            };
+            grid.appendChild(b);
+        });
+    }
+
+    function setupApologyGame() {
+        document.getElementById('mg-title').innerText = "⚠️ クライアントからの激怒電話";
+        document.getElementById('mg-instructions').innerText = "相手の怒りに対して、ビジネスとして最も適切な謝罪メールを選べ！";
+        document.getElementById('mg-container-apology').style.display = 'block';
+        const pool = [
+            { q: "上司「おい！頼んでおいたデータの数字が間違ってるぞ！」", ans: "「大変失礼いたしました。ただちに修正し、再提出いたします」", wrongs: ["「私のせいではありません。同僚のミスです」", "「次から気をつければ問題ないかと思います」"] },
+            { q: "取引先「納品されたシステムの仕様が打ち合わせと違うのですが？」", ans: "「ご不便をおかけし誠に申し訳ございません。早急に確認のうえご連絡いたします」", wrongs: ["「それはそちらの確認不足ではないでしょうか？」", "「取り急ぎ、現状のままでご査収ください」"] }
+        ];
+        const data = pool[Math.floor(Math.random() * pool.length)];
+        document.getElementById('mg-apology-q').innerText = data.q;
+        const choiceArea = document.getElementById('mg-apology-choices'); choiceArea.innerHTML = '';
+        let choices = [{text: data.ans, isCorrect: true}];
+        data.wrongs.forEach(w => choices.push({text: w, isCorrect: false}));
+        choices.sort(() => Math.random() - 0.5);
+        choices.forEach(c => {
+            const b = document.createElement('button'); b.className = 'btn'; b.style.textAlign = 'left'; b.innerText = c.text;
+            b.onclick = () => { clearInterval(mgInterval); endMinigame(c.isCorrect); };
+            choiceArea.appendChild(b);
+        });
+    }
+
+    function setupSleepGame() {
+        document.getElementById('mg-title').innerText = "⚠️ 深夜2時の大仕事";
+        document.getElementById('mg-instructions').innerText = "強烈な睡魔が襲う！ボタンを押してゲージを中央の範囲に維持しろ！";
+        document.getElementById('mg-container-sleep').style.display = 'block';
+        let pointerPos = 50; const pointerEl = document.getElementById('mg-sleep-pointer');
+        let sleepInterval = setInterval(() => {
+            pointerPos -= 1.8; pointerEl.style.left = pointerPos + '%';
+            if (pointerPos <= 0 || pointerPos >= 100) { clearInterval(mgInterval); clearInterval(sleepInterval); endMinigame(false); }
+        }, 30);
+        document.getElementById('mg-sleep-btn').onclick = () => { pointerPos = Math.min(100, pointerPos + 12); pointerEl.style.left = pointerPos + '%'; };
+        let checkWinInterval = setInterval(() => { if (document.getElementById('minigame-area').style.display === 'none') { clearInterval(sleepInterval); clearInterval(checkWinInterval); } }, 100);
+    }
+
+    function endMinigame(isSuccess) {
+        document.getElementById('minigame-area').style.display = 'none';
+        const txt = document.getElementById('dialogue-text'); txt.style.display = 'block';
+        if (isSuccess) {
+            state.evaluation += 25; state.impulse = Math.max(0, state.impulse - 20);
+            document.getElementById('speaker-name').innerText = "システム";
+            txt.innerText = "【修羅場クリア！】見事にトラブルを解決した！社内評価がアップし、ストレスも解消された！";
+        } else {
+            state.mp = Math.max(0, state.mp - 30); state.impulse += 15;
+            document.getElementById('speaker-name').innerText = "システム";
+            txt.innerText = "【修羅場処理に失敗…】ミスが連鎖し、ブラック上司たちから激しい叱責を受けてしまった！";
+        }
+        updateUI();
+        setChoices([{ text: "次へ進む", action: () => { triggerColleaguePhase(); } }]);
+    }
+
+    function triggerPrivatePhase() {
+        state.phase = 'private'; document.getElementById('speaker-name').innerText = textData.narration;
+        if (state.hp <= 0) {
+            document.getElementById('dialogue-text').innerText = "【過労】体力が限界だ。今週末は泥のように眠るしかない…";
+            setChoices([{ text: "泥のように眠る（強制休養）", action: () => { state.hp = 50; state.mp = Math.min(100, state.mp + 15); updateUI(); setChoices([{ text: "翌月へ進む", action: () => { progressMonth(); } }]); } }]);
+            return;
+        }
+        document.getElementById('dialogue-text').innerText = "貴重な週末だ。何をして過ごす？";
+        let choices = [
+            { text: "資格の勉強をする (頭脳＋5, 体力−10)", action: () => { state.intel += 5; state.hp -= 10; next("知識を蓄えた！"); } },
+            { text: "街へ外出する (コミュ力＋3, ルックス＋3, 体力−15)", action: () => { state.comm += 3; state.look += 3; state.hp -= 15; next("街へ出かけて、良い刺激とトレンドを吸収した！"); } },
+            { text: "趣味に没頭する (メンタル＋25, 体力−5)", action: () => { state.mp = Math.min(100, state.mp + 25); state.hp -= 5; next("リフレッシュした！"); } },
+            { text: "体をしっかり休める (体力＋45)", action: () => { state.hp = Math.min(100, state.hp + 45); next("体力が大幅に回復！"); } }
+        ];
+        if (state.year === 3) {
+            choices.push({ text: "🔥 転職活動を行う (必要: HP20 / MP20)", disabled: (state.hp < 20 || state.mp < 20), action: () => { state.hp -= 20; state.mp -= 20; executeJobHunting(); } });
+        }
+        function next(txtMsg) { document.getElementById('dialogue-text').innerText = txtMsg; updateUI(); setChoices([{ text: "翌月へ進む", action: () => { progressMonth(); } }]); }
+        setChoices(choices);
+    }
+
+    function executeJobHunting() {
+        const totalStat = state.comm + state.intel + state.look + (state.evaluation / 2);
+        let loveBonusChance = 0;
+        for (let key in state.friends) {
+            if (state.friends[key].met) {
+                if (key === 'oda') loveBonusChance += (state.friends[key].love / 60);
+                else if (key === 'suzuki' || key === 'watanabe') loveBonusChance += (state.friends[key].love / 200);
+                else loveBonusChance += (state.friends[key].love / 400);
+            }
+        }
+
+        let successChance = 0.35 + (totalStat / 350) + loveBonusChance;
+        document.getElementById('dialogue-text').innerText = "運命の面接結果を待つ……";
+        setTimeout(() => {
+            if (Math.random() < successChance) { triggerEnding(totalStat >= 130 ? "perfect_job" : "good_job"); }
+            else {
+                state.mp = Math.max(0, state.mp - 20);
+                document.getElementById('dialogue-text').innerText = "【不採用】お祈りメールが届いた。精神的ダメージが大きい。";
+                updateUI(); setChoices([{ text: "次へ進む", action: () => { triggerWorkPhase(); } }]);
+            }
+        }, 800);
+    }
+
+    function progressMonth() {
+        state.month++; state.currentTurnCount++;
+        if (state.month > 12) state.month = 1;
+        if (state.currentTurnCount === 13) state.year = 2;
+        if (state.currentTurnCount === 25) { state.year = 3; alert("3年目突入！『転職活動』のコマンドが解禁されました！"); }
+        if (state.currentTurnCount > 36) { triggerEnding("timeup"); return; }
+        triggerWorkPhase();
+    }
+
+    function triggerEnding(type) {
+        const txt = document.getElementById('dialogue-text');
+        document.getElementById('speaker-name').innerText = "【エンディング】";
+        document.getElementById('action-panel').innerHTML = '';
+        const restart = [{ text: "もう一度最初から", action: () => { location.reload(); } }];
+        if (type === "murder") txt.innerText = "【バッド：限界突破】理不尽に脳の回路がショート。会社で大暴れしてあえなく警察へ連行された。";
+        else if (type === "mental_breakdown") txt.innerText = "【バッド：休職】心が完全にポッキリ折れた。そのまま実家で長い療養生活に入ることに。";
+        else if (type === "perfect_job") txt.innerText = "【Sランク超グッド】超優良ホワイト企業へ年収大幅アップで転職成功！元上司たちを見返した！";
+        else if (type === "good_job") txt.innerText = "【Aランクグッド】クリーンな中堅企業へ脱出成功。定時退社できる幸せに涙が止まらない。";
+        else txt.innerText = "【ノーマルエンド】3年が過ぎ社畜として会社に最適化されてしまった。牧の明日はどっちだ。";
+        setChoices(restart);
+    }
+
+    window.onload = initGame;
+</script>
+</body>
+</html>
