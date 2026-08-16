@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>牧攻略戦線 〜あなたは牧を攻略できるのか！？〜</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&display=swap');
+        
+        body {
+            font-family: 'Kiwi Maru', serif;
+            background-color: #fdf2f8;
+            color: #4a4a4a;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 192, 203, 0.5);
+            box-shadow: 0 10px 25px rgba(255, 182, 193, 0.2);
+        }
+
+        .btn-choice {
+            transition: all 0.2s ease;
+        }
+        
+        .btn-choice:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(244, 114, 182, 0.3);
+        }
+        
+        .btn-choice:active {
+            transform: translateY(0);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #game-screen, #result-screen {
+            display: none;
+        }
+
+        /* キャラクターアイコン（CSSで簡易作成） */
+        .maki-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+            border: 3px solid #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        @media (min-width: 640px) {
+            .maki-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 24px;
+            }
+        }
+        
+        // スマホ用スクロールバー非表示調整
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 牧の実写画像スタイル */
+        .maki-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fff;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+        
+        @media (min-width: 640px) {
+            .maki-img {
+                width: 150px;
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+
+    <!-- タイトル＆設定画面 -->
+<!-- ▼▼▼ 2. 既存のブロックを以下のように書き換える ▼▼▼ -->
+    <!-- 設定画面（最初は非表示） -->
+    <div id="title-screen" style="display: none;" class="glass-panel w-full max-w-md rounded-3xl p-5 sm:p-8 fade-in max-h-[95vh] overflow-y-auto no-scrollbar">
+        <!-- 見出しをタイトルから設定用に変更 -->
+        <h2 class="text-2xl font-bold text-center text-pink-500 mb-2">プレイヤー設定</h2>
+        <p class="text-center text-sm text-gray-500 mb-6 sm:mb-8">あなたのステータスを決めてください</p>
+
+        <div class="space-y-4 sm:space-y-5">
+            <!-- (以下、既存の容姿設定などのコードが続く...) -->
+            <!-- 容姿設定 -->
+            <div>
+                <label class="block text-sm font-semibold mb-1.5 text-pink-400">見た目</label>
+                <select id="sel-looks" class="w-full p-3.5 text-base border-2 border-pink-200 rounded-xl focus:outline-none focus:border-pink-400 bg-white shadow-sm">
+                    <option value="beauty">華やか・美形</option>
+                    <option value="healing">親しみ・和み系</option>
+                    <option value="subculture">個性的・サブカル</option>
+                    <option value="boyish">ボーイッシュ・スポーティ</option>
+                    <option value="sharp">隙がない・シャープ</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1.5 text-pink-400">性格</label>
+                <select id="sel-personality" class="w-full p-3.5 text-base border-2 border-pink-200 rounded-xl focus:outline-none focus:border-pink-400 bg-white shadow-sm">
+                    <option value="cool">クール・知性派</option>
+                    <option value="high_tension">天真爛漫・ハイテンション</option>
+                    <option value="mother">包容力・おかん系</option>
+                    <option value="devil">あざとい・小悪魔</option>
+                    <option value="tsundere">ツンデレ・不器用</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1.5 text-pink-400">雰囲気</label>
+                <select id="sel-aura" class="w-full p-3.5 text-base border-2 border-pink-200 rounded-xl focus:outline-none focus:border-pink-400 bg-white shadow-sm">
+                    <option value="mysterious">涼しげ・ミステリアス</option>
+                    <option value="warm">ぽかぽか・温和</option>
+                    <option value="stable">どっしり・頼もしい</option>
+                    <option value="sexy">色っぽい・アンニュイ</option>
+                    <option value="chaos">カオス・独特</option>
+                </select>
+            </div>
+
+            <!-- 立場設定 -->
+            <div class="pt-3">
+                <label class="block text-sm font-semibold mb-2 text-blue-400">あなたと牧の関係（立ち位置）</label>
+                <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                    <label class="cursor-pointer h-full">
+                        <input type="radio" name="relation" value="senpai" class="peer sr-only" checked>
+                        <div class="h-full flex flex-col items-center justify-center text-center p-2 sm:p-3 rounded-xl border-2 border-gray-200 peer-checked:border-blue-400 peer-checked:bg-blue-50 transition shadow-sm">
+                            <span class="text-sm font-bold text-gray-600 peer-checked:text-blue-600">先輩</span>
+                            <span class="text-[10px] sm:text-xs text-gray-400 mt-1 leading-tight">(牧は後輩)</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer h-full">
+                        <input type="radio" name="relation" value="douki" class="peer sr-only">
+                        <div class="h-full flex flex-col items-center justify-center text-center p-2 sm:p-3 rounded-xl border-2 border-gray-200 peer-checked:border-blue-400 peer-checked:bg-blue-50 transition shadow-sm">
+                            <span class="text-sm font-bold text-gray-600 peer-checked:text-blue-600">同期</span>
+                            <span class="text-[10px] sm:text-xs text-gray-400 mt-1 leading-tight">(牧は同期)</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer h-full">
+                        <input type="radio" name="relation" value="kouhai" class="peer sr-only">
+                        <div class="h-full flex flex-col items-center justify-center text-center p-2 sm:p-3 rounded-xl border-2 border-gray-200 peer-checked:border-blue-400 peer-checked:bg-blue-50 transition shadow-sm">
+                            <span class="text-sm font-bold text-gray-600 peer-checked:text-blue-600">後輩</span>
+                            <span class="text-[10px] sm:text-xs text-gray-400 mt-1 leading-tight">(牧は先輩)</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+<!-- BGM設定（立場設定とスタートボタンの間などに追加） -->
+            <div class="pt-3">
+                <label class="block text-sm font-semibold mb-1.5 text-pink-400">BGM選択</label>
+                <select id="sel-bgm" class="w-full p-3.5 text-base border-2 border-pink-200 rounded-xl focus:outline-none focus:border-pink-400 bg-white shadow-sm">
+                    <option value="bgm1">曲名1 </option>
+                    <option value="bgm2">曲名2 </option>
+                    <option value="bgm3">曲名3 </option>
+                    <option value="bgm4">曲名4 </option>
+                    <option value="bgm5">曲名5 </option>
+                    <option value="bgm6">曲名6 </option>
+                    <option value="none">BGMなし</option>
+                </select>
+            </div>
+
+            <button onclick="startGame()" class="w-full mt-8 bg-gradient-to-r from-pink-400 to-purple-400 text-white text-lg font-bold py-4 rounded-xl shadow-lg hover:opacity-90 transition active:scale-95">
+                攻略スタート
+            </button>
+        </div>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="game-screen" class="glass-panel w-full max-w-md rounded-3xl p-5 sm:p-8 flex flex-col max-h-[95vh] overflow-y-auto no-scrollbar relative">
+        
+        <!-- ヘッダー（好感度メーター） -->
+        <div class="flex items-center justify-between mb-4 sticky top-0 bg-white/60 backdrop-blur-md rounded-xl p-2 z-10 -mx-2 px-4 shadow-sm">
+            <span class="text-sm font-bold text-gray-600">Day <span id="ui-day">1</span>/15</span>
+            <div class="flex items-center space-x-3">
+                <span class="text-xs font-bold text-pink-500">好感度</span>
+                <div class="w-24 sm:w-32 h-3.5 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                    <div id="ui-affection" class="h-full bg-pink-400 transition-all duration-500" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 牧の立ち絵エリア -->
+        <div class="flex-shrink-0 flex flex-col items-center justify-center py-2 sm:py-4 relative min-h-[110px]">
+            <!-- イベントタイトル -->
+            <div id="ui-event-title" class="absolute -top-2 left-0 bg-blue-100 text-blue-600 text-[11px] sm:text-xs px-3 py-1.5 rounded-full font-bold shadow-sm">
+                イベントタイトル
+            </div>
+            
+            <img id="ui-maki-img" alt="牧" class="maki-img mb-2">
+            <div id="ui-maki-status" class="h-6 text-xs sm:text-sm text-purple-500 font-bold opacity-0 transition-opacity text-center px-1 mt-1">
+                <!-- クリティカル等のメッセージ -->
+            </div>
+        </div>
+
+        <!-- テキストエリア -->
+        <div class="bg-white/90 border-2 border-pink-100 rounded-2xl p-4 sm:p-5 mb-5 min-h-[110px] shadow-sm relative flex flex-col justify-center flex-shrink-0">
+            <div id="ui-speaker" class="absolute -top-3.5 left-4 bg-pink-400 text-white text-[11px] sm:text-xs font-bold px-3 py-1 rounded-full hidden shadow">
+                牧
+            </div>
+            <p id="ui-text" class="text-gray-700 leading-relaxed text-sm sm:text-base font-medium whitespace-pre-wrap">
+                シチュエーションテキストがここに入ります。
+            </p>
+        </div>
+
+        <!-- 選択肢エリア -->
+        <div id="ui-choices" class="space-y-3 sm:space-y-4 flex-shrink-0 pb-4">
+            <!-- JSでボタンを生成 -->
+        </div>
+        
+        <!-- 次へボタン（結果表示時のみ表示） -->
+        <div class="mt-auto pb-2">
+            <button id="ui-next-btn" onclick="nextEvent()" class="hidden w-full bg-blue-400 text-white text-lg font-bold py-4 rounded-xl shadow-md hover:bg-blue-500 transition active:scale-95">
+                次へ進む
+            </button>
+        </div>
+    </div>
+
+    <!-- リザルト画面 -->
+    <div id="result-screen" class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 text-center flex-col items-center justify-center max-h-[95vh] overflow-y-auto no-scrollbar">
+        <h2 class="text-3xl font-bold text-pink-500 mb-2">攻略完了！</h2>
+        <p class="text-gray-500 mb-6">最終好感度</p>
+        
+        <div class="text-6xl font-black text-purple-500 mb-4" id="res-score">0</div>
+        
+        <div id="res-title" class="text-xl font-bold text-gray-800 mb-2 leading-snug">称号</div>
+        <p id="res-desc" class="text-sm text-gray-600 mb-8 bg-white/50 p-4 rounded-xl border border-gray-200">
+            結果コメント
+        </p>
+        
+        <button onclick="location.reload()" class="w-full bg-gray-800 text-white font-bold py-4 rounded-xl shadow hover:bg-gray-700 transition active:scale-95">
+            タイトルに戻る
+        </button>
+    </div>
+
+    <script>
+
+// ▼▼▼ ここから追加：タイトル画面から設定画面へ進む処理 ▼▼▼
+        function goToSettings() {
+            document.getElementById('top-screen').style.display = 'none';
+            
+            const titleScreen = document.getElementById('title-screen');
+            titleScreen.style.display = 'block';
+            
+            // アニメーションを再発火させるための処理
+            titleScreen.classList.remove('fade-in');
+            void titleScreen.offsetWidth; // リフロー強制
+            titleScreen.classList.add('fade-in');
+        }
+        // ▲▲▲ ここまで追加 ▲▲▲
+
+// ▼▼▼ パスを指定する場所 ▼▼▼
+        const BGM_PATHS = {
+            bgm1: 'BGM/BGM (1).mp3', // ← ここを1曲目のパスに変更
+            bgm2: 'BGM/BGM (2).mp3', // ← ここを2曲目のパスに変更
+            bgm3: 'BGM/BGM (3).mp3', // ← ここを3曲目のパスに変更
+            bgm4: 'BGM/BGM (4).mp3', // ← ここを4曲目のパスに変更
+            bgm5: 'BGM/BGM (5).mp3', // ← ここを5曲目のパスに変更
+            bgm6: 'BGM/BGM (6).mp3'  // ← ここを6曲目のパスに変更
+        };
+        // ▲▲▲ ここまで ▲▲▲
+
+        // --- データ定義 ---
+
+        // プレイヤー設定保持用
+        let player = {
+            looks: '', personality: '', aura: '', relation: ''
+        };
+        let currentEventIdx = 0;
+        let affection = 0; // 0〜100（最大150くらいまで行くかも）
+
+        // ご指定の形に画像パスとキーを修正
+        const MAKI_FACES = {
+            default: 'img/maki/デフォルト.JPG',
+            smile: 'img/maki/笑顔.JPG',
+            angry: 'img/maki/怒っている顔.JPG',
+            sad: 'img/maki/悲しい顔.JPG',
+            disgust: 'img/maki/嫌そうな顔.JPG',
+            surprise: 'img/maki/驚いた顔.JPG'
+        };
+
+        // 全15イベントデータ
+        // relation: senpai(プレイヤーが先輩/牧は後輩), douki(同期), kouhai(プレイヤーが後輩/牧は先輩)
+        const events = [
+            {
+                title: "1. 朝の遭遇",
+                text: "朝の廊下で、ばったり牧と遭遇した。",
+                choices: [
+                    { text: "「おはよう！」と笑顔で挨拶する", reactions: { senpai: "「わ、〇〇先輩！おはようございますっ！」", douki: "「……朝から元気だな。おはよう」", kouhai: "「お、おはよう。今日も元気だな」" }, tag: "straight" },
+                    { text: "ジーッと黙って目を見つめる", reactions: { senpai: "「えっ、顔に何か付いてます…？」", douki: "「なんだよ、人の顔ジロジロ見て」", kouhai: "「ん？どうした？眠いのか？」" }, tag: "eccentric" },
+                    { text: "サッと道を譲る", reactions: { senpai: "「あ、すんません！通ります！」", douki: "「お、サンキュ。助かるわ」", kouhai: "「おっと、悪いな。ありがとう」" }, tag: "passive" }
+                ]
+            },
+            {
+                title: "2. お昼休みの誘い",
+                text: "昼休み、一人でご飯を食べようとしている牧を見かけた。",
+                choices: [
+                    { text: "「一緒に食べていい？」と隣に座る", reactions: { senpai: "「いいんすか！？ご一緒します！」", douki: "「まぁ、席空いてるし勝手に座れば」", kouhai: "「おう、こっち来いよ。一緒に食おう」" }, tag: "straight" },
+                    { text: "無言で飲み物を買って差し入れる", reactions: { senpai: "「わ、ありがとうございます！優しい〜！」", douki: "「…サンキュ。気ィ使わせたな」", kouhai: "「お、ありがとな。気が利くな」" }, tag: "passive" },
+                    { text: "「一口頂戴！」と距離を詰める", reactions: { senpai: "「えっ！？あ、はい、どうぞ！」", douki: "「は？お前…まぁいいけど。ほら」", kouhai: "「仕方ないな、ほら、あーしろ」" }, tag: "aggressive" }
+                ]
+            },
+            {
+                title: "3. 居残り・残業",
+                text: "夜、二人きりの部屋で作業中。牧が疲れた様子を見せている。",
+                choices: [
+                    { text: "温かい飲み物を渡して休憩を促す", reactions: { senpai: "「先輩！ありがとうございます、生き返ります！」", douki: "「…毒入ってないだろうな？サンキュ」", kouhai: "「ありがとな。ほんと気配り上手だな」" }, tag: "passive" },
+                    { text: "「代わるよ」と作業を引き取る", reactions: { senpai: "「いやいや！流石に申し訳ないっす！」", douki: "「は？お前も疲れてんだろ、いいよ」", kouhai: "「お前のその気持ちだけで十分だよ、ありがとな」" }, tag: "aggressive" },
+                    { text: "肩を叩いて励ます", reactions: { senpai: "「はいっ！先輩も頑張ってるんで俺も！」", douki: "「…まぁ、もう少しだけ付き合ってやるよ」", kouhai: "「おう、一緒に片付けちゃうか」" }, tag: "straight" }
+                ]
+            },
+            {
+                title: "4. 突然の雨",
+                text: "帰りがけに突然の雨。牧は傘を持っていないようだ。",
+                choices: [
+                    { text: "「一緒に入る？」と傘を開いて誘う", reactions: { senpai: "「えっ、いいんすか？失礼します！」", douki: "「…悪い。肩濡れないようにしろよ」", kouhai: "「お、助かる。俺が持つよ」" }, tag: "straight" },
+                    { text: "「走って帰ろう！」と手を引く", reactions: { senpai: "「ちょ、先輩早いっす！待って！」", douki: "「はぁ！？バカお前、風邪引くぞ！」", kouhai: "「おいおい、転ばないようにしろよ！」" }, tag: "eccentric" },
+                    { text: "傘を押し付けて雨の中に飛び出す", reactions: { senpai: "「えっ！？先輩！？風邪引きますよ！」", douki: "「おいバカ！何やってんだお前！」", kouhai: "「おい待て！一緒に入れって！」" }, tag: "aggressive" }
+                ]
+            },
+            {
+                title: "5. 夕暮れの帰り道",
+                text: "偶然帰り道が一緒になり、二人で歩いている。",
+                choices: [
+                    { text: "今日の出来事を楽しそうに語る", reactions: { senpai: "「へえ、そんなことあったんすね！」", douki: "「お前ほんとよく喋るな。聞いてるけど」", kouhai: "「うんうん、それで？どうなったんだ？」" }, tag: "straight" },
+                    { text: "黙って心地よい沈黙を共有する", reactions: { senpai: "「……なんか、落ち着きますね」", douki: "「……なんか、静かすぎないか？」", kouhai: "「……こういう時間も、悪くないな」" }, tag: "passive" },
+                    { text: "「少し遠回りして帰らない？」", reactions: { senpai: "「！ もちろんです！お供します！」", douki: "「…まぁ、別に暇だし。いいけど」", kouhai: "「ん、いいぞ。どこ行きたい？」" }, tag: "aggressive" }
+                ]
+            },
+            {
+                title: "6. 休日お出かけ",
+                text: "休日に買い物へ。服を選んでいる最中だ。",
+                choices: [
+                    { text: "「どれが似合うと思う？」と聞く", reactions: { senpai: "「えっ、先輩は何着ても似合いますよ！」", douki: "「こっちのほうがマシじゃないか？」", kouhai: "「んー、こっちの色が似合うと思うぞ」" }, tag: "straight" },
+                    { text: "牧に似合いそうな服を真剣に選ぶ", reactions: { senpai: "「俺にっすか？嬉しいです！」", douki: "「…そんなに真剣に選ばれると照れるな」", kouhai: "「お、センスいいじゃん。試着してくる」" }, tag: "passive" },
+                    { text: "「何着てもカッコいいね」と褒める", reactions: { senpai: "「っ！？ せ、先輩から言われると照れます…」", douki: "「っ…お、お前急に何言ってんだよ」", kouhai: "「っ…お前な、そういう事サラッと言うなよ」" }, tag: "aggressive" }
+                ]
+            },
+            {
+                title: "7. 深夜のテンション",
+                text: "深夜のファミレス。ジャンクフードを食べながら謎のテンションだ。",
+                choices: [
+                    { text: "人生観や将来の夢について熱く語る", reactions: { senpai: "「先輩、かっこいいっす。俺も頑張ります」", douki: "「真面目か。でも、そういうとこ嫌いじゃない」", kouhai: "「お前は真っ直ぐだな。応援するよ」" }, tag: "straight" },
+                    { text: "くだらないジョークを連発する", reactions: { senpai: "「ぶふっ！ちょ、飲み物吹きそうです！」", douki: "「お前深夜テンションおかしいだろ（笑）」", kouhai: "「っはは！お前ほんと面白いな」" }, tag: "eccentric" },
+                    { text: "「眠いからもう帰る」と急に冷める", reactions: { senpai: "「えっ！？すんません引き留めて！」", douki: "「は？お前ほんと自由だな…」", kouhai: "「お、おう。気をつけて帰れよ」" }, tag: "cold" }
+                ]
+            },
+            {
+                title: "8. ハプニング",
+                text: "バランスを崩し、牧に重なるように密着してしまった！",
+                choices: [
+                    { text: "「ご、ごめん！」とパッと離れる", reactions: { senpai: "「だ、大丈夫っすか！？怪我ないですか！？」", douki: "「お、おい！気ィつけろよ、危ねーな」", kouhai: "「大丈夫か？あんまり無理すんなよ」" }, tag: "straight" },
+                    { text: "離れずにそのまま見つめ返す", reactions: { senpai: "「っ……せ、先輩、近いです……」", douki: "「っ……おい、いつまで乗っかってんだよ」", kouhai: "「っ……お前、ちょっと無防備すぎ」" }, tag: "aggressive" },
+                    { text: "「ちょっと、重いんだけど」と突き放す", reactions: { senpai: "「ひぃ！す、すんません退きます！」", douki: "「んだよ、わざとじゃねーだろ」", kouhai: "「悪かったな、そんな怒るなよ」" }, tag: "cold" }
+                ]
+            },
+            {
+                title: "9. 部屋訪問",
+                text: "牧の自室に行くことに。趣味の品が並んでいる。",
+                choices: [
+                    { text: "コレクションを興味津々に褒める", reactions: { senpai: "「本当っすか！？実はこれ〜で…」", douki: "「…お、分かる？それ結構レアなんだよ」", kouhai: "「はは、そんな珍しいか？よかったら見るか？」" }, tag: "straight" },
+                    { text: "「ふーん…」と興味なさそうにする", reactions: { senpai: "「あ、あんまり面白くないっすよね…」", douki: "「興味ないなら見んなよ」", kouhai: "「つまんないか？ごめんな」" }, tag: "cold" },
+                    { text: "意味不明な置物を絶賛する", reactions: { senpai: "「そ、そこっすか！？」", douki: "「お前センス独特だな…」", kouhai: "「はは、それ選ぶのお前くらいだぞ」" }, tag: "eccentric" }
+                ]
+            },
+            {
+                title: "10. 看病",
+                text: "牧が風邪気味で元気がなく、辛そうにしている。",
+                choices: [
+                    { text: "ご飯や飲み物をサッと作ってあげる", reactions: { senpai: "「先輩……すんません、めっちゃ美味しいです」", douki: "「…サンキュ。恩に着る」", kouhai: "「ありがとな。お前の飯、うまいな」" }, tag: "straight" },
+                    { text: "「熱ある…？」とおでこに手を当てる", reactions: { senpai: "「っ！？ せ、先輩、手冷たくて気持ちいいっす…」", douki: "「っ！急に触んな…移るだろ」", kouhai: "「っ…大したことないから。心配すんな」" }, tag: "aggressive" },
+                    { text: "「自己管理できてないね」と呆れる", reactions: { senpai: "「うぅ…返す言葉もないっす…」", douki: "「うるせぇ、お前には関係ないだろ…」", kouhai: "「…面目ない。説教は治ってからにしてくれ」" }, tag: "cold" }
+                ]
+            },
+            {
+                title: "11. 閉じ込め",
+                text: "資料室のドアノブが壊れ、二人きりで閉じ込められてしまった！",
+                choices: [
+                    { text: "「落ち着いて脱出方法を探そう」", reactions: { senpai: "「流石先輩、冷静っすね！俺も探します！」", douki: "「そうだな。とりあえずスマホの電波は…」", kouhai: "「そうだな。大丈夫、なんとかなるさ」" }, tag: "straight" },
+                    { text: "「二人きりになれてラッキーかも」", reactions: { senpai: "「っ！？ せ、先輩、こんな時に何言ってるんすか！」", douki: "「っ…お前なぁ、状況わかってんのか？」", kouhai: "「っ…お前、そういう冗談は心臓に悪い」" }, tag: "aggressive" },
+                    { text: "その場で無言で筋トレを始める", reactions: { senpai: "「えっ！？なんで急に鍛え出してるんすか！？」", douki: "「お前、状況わかってんのか…？」", kouhai: "「…お前、ほんとマイペースだな」" }, tag: "eccentric" }
+                ]
+            },
+            {
+                title: "12. お祭り",
+                text: "賑やかなイベントへ。人が多くてはぐれそうになる。",
+                choices: [
+                    { text: "はぐれないように手を繋ぐ", reactions: { senpai: "「っ！？ わ、わかりました、絶対離しません！」", douki: "「っ…お、おい。まぁ、はぐれるよりマシか」", kouhai: "「っ…おっと。しっかり掴まっとけよ」" }, tag: "aggressive" },
+                    { text: "「はぐれないでね」と袖を掴ませる", reactions: { senpai: "「はいっ！先輩の背中、しっかり付いていきます！」", douki: "「…子供かよ。まぁいいけど」", kouhai: "「はは、わかった。置いてかないから安心しろ」" }, tag: "straight" },
+                    { text: "狐のお面を被って突然踊り出す", reactions: { senpai: "「せ、先輩！？どこ行くんですか！？」", douki: "「お前、ほんとアホだな…置いてくぞ」", kouhai: "「おいおい、はぐれるぞ。ほら、手貸せ」" }, tag: "eccentric" }
+                ]
+            },
+            {
+                title: "13. 嫉妬",
+                text: "牧が他の親しげな人物と話しているところを目撃した。",
+                choices: [
+                    { text: "「仲良いんだね」と少し拗ねて見せる", reactions: { senpai: "「えっ！？ち、違いますよ！先輩の方がずっと…！」", douki: "「は？何言って…もしかして嫉妬してんの？」", kouhai: "「ん？あいつとはただの知り合いだぞ。拗ねんなよ」" }, tag: "aggressive" },
+                    { text: "何事もなかったかのように後から声をかける", reactions: { senpai: "「あ、先輩！お疲れ様です！」", douki: "「おう、お疲れ。遅かったな」", kouhai: "「お、〇〇。待ってたぞ」" }, tag: "straight" },
+                    { text: "「あっそ」と冷たく立ち去る", reactions: { senpai: "「えっ、先輩！？待ってください！」", douki: "「おい、なんだよその態度…」", kouhai: "「ん？どうした？急に不機嫌になって」" }, tag: "cold" }
+                ]
+            },
+            {
+                title: "14. プレゼント",
+                text: "牧へプレゼントを手渡す場面。",
+                choices: [
+                    { text: "欲しがっていたものを渡す", reactions: { senpai: "「えっ！？これ欲しかったやつ！先輩最高っす！」", douki: "「お前…覚えててくれたのか。サンキュ」", kouhai: "「お、マジか。ありがとな、大事にする」" }, tag: "straight" },
+                    { text: "ウケ狙いの面白グッズをドヤ顔で渡す", reactions: { senpai: "「ぶはっ！先輩、流石っす！センス高すぎ！」", douki: "「はぁ！？なんだこれ（笑）ふざけんなよ」", kouhai: "「っはは！お前ほんと期待裏切らねぇな」" }, tag: "eccentric" },
+                    { text: "「そこにあったから」と適当に渡す", reactions: { senpai: "「えっ！ついででも嬉しいっす！」", douki: "「お前…可愛げねぇな。まぁサンキュ」", kouhai: "「ふふ、素直じゃないな。ありがとな」" }, tag: "cold" }
+                ]
+            },
+            {
+                title: "15. クライマックス",
+                text: "夕暮れの思い出の場所で二人きり。決定的な空気が流れる。",
+                choices: [
+                    { text: "「私のこと、本当はどう思ってる？」", reactions: { senpai: "「っ……俺、ずっと先輩のことが……」", douki: "「……言わせんなよ。わかってるくせに」", kouhai: "「……鈍いな。好きに決まってるだろ」" }, tag: "straight" },
+                    { text: "いきなり抱きつく", reactions: { senpai: "「っ！？せ、先輩…！反則っすよ…」", douki: "「っ…おい、急にくっつくなよ…」", kouhai: "「っ…お前、覚悟してそういうことしてんのか？」" }, tag: "aggressive" },
+                    { text: "「あんたのことなんて、別に…」と目を逸らす", reactions: { senpai: "「っ……そういうとこも、好きっすよ」", douki: "「……ほんと、素直じゃねーな」", kouhai: "「……嘘下手だな。顔赤いぞ」" }, tag: "cold" }
+                ]
+            }
+        ];
+
+function startGame() {
+            // 設定取得
+            player.looks = document.getElementById('sel-looks').value;
+            player.personality = document.getElementById('sel-personality').value;
+            player.aura = document.getElementById('sel-aura').value;
+            player.relation = document.querySelector('input[name="relation"]:checked').value;
+
+            // ▼▼▼ BGM再生処理を追記 ▼▼▼
+            const selectedBgmKey = document.getElementById('sel-bgm').value;
+            const bgm = document.getElementById('bgm');
+            
+            // 以前の曲が鳴っていれば一度止める
+            bgm.pause();
+            
+            if (selectedBgmKey !== "none") {
+                bgm.src = BGM_PATHS[selectedBgmKey]; // 選んだ曲のパスをセット
+                bgm.volume = 0.2; // 音量（0.0 〜 1.0）
+                bgm.play().catch(error => {
+                    console.log("ブラウザの制限等でBGMが再生できませんでした", error);
+                });
+            }
+            // ▲▲▲ ここまで追記 ▲▲▲
+
+            // 画面切り替え
+            document.getElementById('title-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+            document.getElementById('game-screen').classList.add('fade-in');
+
+            currentEventIdx = 0;
+            affection = 0;
+            renderEvent();
+        }
+
+        function renderEvent() {
+            const ev = events[currentEventIdx];
+            
+            // スクロールを上部に戻す
+            document.getElementById('game-screen').scrollTo({ top: 0, behavior: 'smooth' });
+
+            // UIリセット
+            document.getElementById('ui-day').innerText = currentEventIdx + 1;
+            document.getElementById('ui-event-title').innerText = ev.title;
+            document.getElementById('ui-text').innerText = ev.text;
+            document.getElementById('ui-speaker').classList.add('hidden');
+            document.getElementById('ui-next-btn').classList.add('hidden');
+            document.getElementById('ui-maki-status').style.opacity = 0;
+            document.getElementById('ui-maki-img').src = MAKI_FACES.default; // 新しいイベント時はデフォルト顔に戻す
+            
+            const choicesContainer = document.getElementById('ui-choices');
+            choicesContainer.innerHTML = '';
+            choicesContainer.classList.remove('hidden');
+
+            ev.choices.forEach((choice, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "btn-choice w-full text-left bg-white border-2 border-pink-200 text-pink-600 font-bold py-3.5 px-4 sm:px-5 rounded-xl hover:bg-pink-50 text-sm sm:text-base leading-snug shadow-sm active:scale-[0.98]";
+                btn.innerText = choice.text;
+                btn.onclick = () => selectChoice(choice);
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        function selectChoice(choice) {
+            // 基本リアクション取得
+            const reactionText = choice.reactions[player.relation];
+            
+            let scoreChange = 0;
+            let bonusMsg = "";
+            let statusColor = "text-gray-500";
+            let faceImg = MAKI_FACES.default; // 表情画像の初期値
+            
+            // ギャップ＆相性判定 (クリティカル・マイナス反転ロジック)
+            switch(choice.tag) {
+                case 'straight': // 王道
+                    scoreChange = 5;
+                    bonusMsg = "牧は好印象を抱いたようだ。（+5）";
+                    statusColor = "text-pink-500";
+                    faceImg = MAKI_FACES.smile;
+                    break;
+                case 'passive': // 控えめ
+                    if (player.personality === 'mother' || player.aura === 'warm') {
+                        scoreChange = 10;
+                        bonusMsg = "【実家のような安心感】牧の心が安らいでいる…！（+10）";
+                        statusColor = "text-yellow-500";
+                        faceImg = MAKI_FACES.smile;
+                    } else {
+                        scoreChange = 2;
+                        bonusMsg = "牧は少し物足りなさを感じているようだ。（+2）";
+                        statusColor = "text-blue-400";
+                        faceImg = MAKI_FACES.default;
+                    }
+                    break;
+                case 'eccentric': // カオス
+                    if (player.aura === 'chaos' || player.personality === 'high_tension') {
+                        scoreChange = 12;
+                        bonusMsg = "【笑いのツボ直撃】謎の行動が牧にクリティカルヒット！（+12）";
+                        statusColor = "text-yellow-500";
+                        faceImg = MAKI_FACES.surprise; // 予期せぬ行動にドギマギ
+                    } else {
+                        scoreChange = -5;
+                        bonusMsg = "牧はあなたの奇行にドン引きしている…（-5）";
+                        statusColor = "text-blue-600";
+                        // 元の eww を disgust に変更
+                        faceImg = MAKI_FACES.disgust; // ドン引き
+                    }
+                    break;
+                case 'aggressive': // 強引
+                    if (player.looks === 'beauty' || player.personality === 'devil') {
+                        scoreChange = 12;
+                        bonusMsg = "【小悪魔の魅力】強引な態度に牧はドキドキしている！（+12）";
+                        statusColor = "text-red-500";
+                        faceImg = MAKI_FACES.surprise; // ドキッとしている
+                    } else {
+                        scoreChange = -3;
+                        bonusMsg = "急な距離の詰め方に、牧は少し警戒している。（-3）";
+                        statusColor = "text-blue-600";
+                        faceImg = MAKI_FACES.angry; // 警戒・反発
+                    }
+                    break;
+                case 'cold': // 塩対応
+                    if (player.personality === 'tsundere' || (player.looks === 'sharp' && player.personality === 'cool')) {
+                        scoreChange = 15;
+                        bonusMsg = "【ご褒美】冷たい態度が逆に牧の性癖にぶっ刺さった！！（+15）";
+                        statusColor = "text-purple-500";
+                        faceImg = MAKI_FACES.smile; // ゾクゾクして喜んでいる
+                    } else {
+                        scoreChange = -8;
+                        bonusMsg = "冷たい態度に、牧は少し傷ついたようだ…（-8）";
+                        statusColor = "text-blue-600";
+                        faceImg = MAKI_FACES.sad; // しょんぼり
+                    }
+                    break;
+            }
+
+            affection += scoreChange;
+            if(affection < 0) affection = 0; // マイナスにはならないようにする
+            if(affection > 150) affection = 150; // MAX
+            
+            // メーター更新
+            const meterPercent = Math.min((affection / 150) * 100, 100);
+            document.getElementById('ui-affection').style.width = meterPercent + '%';
+            
+            // 下がった場合はメーターの色を一時的に青っぽくする演出
+            const meterEl = document.getElementById('ui-affection');
+            if (scoreChange < 0) {
+                meterEl.classList.remove('bg-pink-400');
+                meterEl.classList.add('bg-blue-400');
+                setTimeout(() => {
+                    meterEl.classList.remove('bg-blue-400');
+                    meterEl.classList.add('bg-pink-400');
+                }, 800);
+            }
+
+            // UI更新
+            document.getElementById('ui-choices').classList.add('hidden');
+            document.getElementById('ui-text').innerText = reactionText;
+            document.getElementById('ui-speaker').classList.remove('hidden');
+            
+            // 表情画像の適用
+            document.getElementById('ui-maki-img').src = faceImg;
+            
+            const statusEl = document.getElementById('ui-maki-status');
+            statusEl.innerText = bonusMsg;
+            statusEl.className = `h-6 text-xs sm:text-sm font-bold transition-opacity mt-1 ${statusColor}`;
+            statusEl.style.opacity = 1;
+
+            document.getElementById('ui-next-btn').classList.remove('hidden');
+
+            // スマホでの視認性向上のため少し下にスクロールして次へボタンを見せる
+            setTimeout(() => {
+                const gameScreen = document.getElementById('game-screen');
+                gameScreen.scrollTo({ top: gameScreen.scrollHeight, behavior: 'smooth' });
+            }, 50);
+        }
+
+        function nextEvent() {
+            currentEventIdx++;
+            if (currentEventIdx < events.length) {
+                renderEvent();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'flex';
+            document.getElementById('result-screen').classList.add('fade-in');
+
+            document.getElementById('res-score').innerText = affection;
+
+            let title = "";
+            let desc = "";
+
+            if (affection >= 130) {
+                title = "【完全攻略】牧の心はあなたのもの！";
+                desc = "あなたの容姿と立ち振る舞いが完璧に牧に刺さりました。もう牧はあなたなしでは生きていけません。完全敗北宣言です！";
+                document.getElementById('res-score').classList.add('text-red-500');
+            } else if (affection >= 100) {
+                title = "【ハッピーエンド】甘い恋の始まり";
+                desc = "王道の展開で見事に牧を落としました。関係性もバッチリ！これから二人の甘い日々が始まります。";
+            } else if (affection >= 70) {
+                title = "【ノーマルエンド】気になる存在";
+                desc = "牧にとってあなたは「気になる特別な人」になりました。あと一歩で恋人同士！もう少しギャップを見せると良かったかも？";
+            } else {
+                title = "【友達エンド】いい同僚・先輩・後輩";
+                desc = "牧の心の壁は完全には壊せませんでした。でも、人としてはとても信頼されています！容姿を変えてリベンジしてみましょう！";
+            }
+
+            document.getElementById('res-title').innerText = title;
+            document.getElementById('res-desc').innerText = desc;
+        }
+
+        // 初期の画像を設定
+        document.getElementById('ui-maki-img').src = MAKI_FACES.default;
+    </script>
+</body>
+
+<body>
+    <!-- BGM用オーディオ要素（ソースはJSで指定します） -->
+    <audio id="bgm" loop></audio>
+
+    <!-- タイトル＆設定画面（既存のコード） -->
+
+<body>
+    <!-- (もしあればBGM用オーディオ要素...) -->
+
+    <!-- ▼▼▼ 1. 新しく追加する「タイトル画面」 ▼▼▼ -->
+    <div id="top-screen" class="glass-panel w-full max-w-md rounded-3xl p-8 sm:p-10 text-center flex flex-col items-center justify-center fade-in">
+        <div class="text-6xl sm:text-7xl mb-4 drop-shadow-md">💖</div>
+        <h1 class="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500 mb-3 drop-shadow">牧攻略戦線</h1>
+        <p class="text-sm sm:text-base font-bold text-gray-500 tracking-widest mb-12">〜あなたは牧を攻略できるのか！？〜</p>
+        
+        <!-- TAP TO START ボタン（ふわふわ点滅するアニメーション付き） -->
+        <button onclick="goToSettings()" class="w-full bg-gradient-to-r from-pink-400 to-purple-400 text-white text-xl font-bold py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95 animate-pulse">
+            TAP TO START
+        </button>
+    </div>
+    <!-- ▲▲▲ ここまで追加 ▲▲▲ -->
+
+</html>
